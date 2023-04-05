@@ -1,36 +1,39 @@
 import React, { useMemo } from "react";
 import MOCK_DATA from "./MOCK_DATA.json";
 import { COLUMNS, GROUPED_COLUMNS } from "./columns";
-import { useTable, useGlobalFilter, useSortBy, useFilters } from "react-table";
+import { useTable, usePagination } from "react-table";
 import "./table.css";
-import GlobalFilter from "./GlobalFilter";
 
-const FilteringTable = () => {
+const PaginationTable = () => {
 
-    const columns = useMemo(() => GROUPED_COLUMNS, []);
+    const columns = useMemo(() => COLUMNS, []);
     const data = useMemo(() => MOCK_DATA, []);
 
     const tableInstance = useTable({
         columns: columns,
         data: data,
-    }, useFilters, useGlobalFilter);
+        initialState: {
+            pageSize: 10
+        }
+    }, usePagination)
 
     const {
         getTableProps,
         getTableBodyProps,
         headerGroups,
-        rows,
+        page,
         prepareRow,
-        footerGroups,
+        nextPage,
+        previousPage,
         state,
-        setGlobalFilter,
+        canNextPage,
+        canPreviousPage,
     } = tableInstance;
 
-    const { globalFilter } = state;
+    const { pageIndex, pageSize } = state;
 
     return (
         <>
-            <GlobalFilter filter={globalFilter} setFilter={setGlobalFilter} />
             <table {...getTableProps()}>
                 <thead>
                     {
@@ -40,7 +43,6 @@ const FilteringTable = () => {
                                     headerGroup.headers.map(column => (
                                         <th {...column.getHeaderProps()}>
                                             {column.render("Header")}
-                                            
                                         </th>
                                     ))
                                 }
@@ -52,7 +54,7 @@ const FilteringTable = () => {
                 </thead>
                 <tbody {...getTableBodyProps()}>
                     {
-                        rows.map(row => {
+                        page.map(row => {
                             prepareRow(row);
                             return (
                                 <tr {...row.getRowProps()}>
@@ -70,24 +72,13 @@ const FilteringTable = () => {
                         })
                     }
                 </tbody>
-                <tfoot>
-                    {
-                        footerGroups.map(footerGroup => (
-                            <tr {...footerGroup.getFooterGroupProps()}>
-                                {
-                                    footerGroup.headers.map(column => (
-                                        <td {...column.getFooterProps()}>
-                                            {column.render("Footer")}
-                                        </td>
-                                    ))
-                                }
-                            </tr>
-                        ))
-                    }
-                </tfoot>
             </table>
+            <div className="">
+                <button onClick={() => previousPage()} disabled={!canPreviousPage}>Previous</button>
+                <button onClick={() => nextPage()} disabled={!canNextPage}>Next</button>
+            </div>
         </>
     )
 }
 
-export default FilteringTable;
+export default PaginationTable;
